@@ -62,10 +62,6 @@ output/
 
 The default `km_per_pix = 0.0035 / lane_height` ratio is calibrated for standard highway footage. Adjust this constant in `src/speed_detect.py` for different camera heights/zoom levels.
 
-## Improvement Roadmap
-
-See [IMPROVEMENTS.md](IMPROVEMENTS.md)
-
 ## License
 
 MIT
