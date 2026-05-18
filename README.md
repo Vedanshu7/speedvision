@@ -4,6 +4,27 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 
 `speedvision` processes a highway video, automatically detects lane boundaries, splits the feed by lane, tracks vehicles across detection lines, and calculates their speed in km/h. Vehicles exceeding the speed limit are flagged and their images saved.
 
+## Input / Output
+
+**Input: reference frame used for lane detection**
+
+![Input reference frame](assets/input-image.jpg)
+
+**Lane boundary detection (greyscale + Canny edges)**
+
+![Greyscale edge detection](assets/gray.jpeg)
+
+**Output: annotated frame with vehicle detection and speed overlay**
+
+| Detection output | Alt view |
+|---|---|
+| ![Output](assets/output.jpeg) | ![Output alt](assets/output1.jpeg) |
+
+**Sample per-lane split clips** (pre-run, from `assets/samples/`):
+`output1.avi` `output2.avi` `output3.avi` `output4.avi` `output5.avi` `output6.avi`
+
+---
+
 ## How It Works
 
 1. **Lane detection** — uses Canny edge detection and contour analysis on a reference image to find lane boundaries
