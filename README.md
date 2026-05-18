@@ -64,4 +64,4 @@ The default `km_per_pix = 0.0035 / lane_height` ratio is calibrated for standard
 
 ## License
 
-MIT
+[MIT](LICENSE)
