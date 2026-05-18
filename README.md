@@ -68,19 +68,24 @@ speedvision/
 ├── assets/
 │   ├── input-image.jpg     # Reference frame for lane detection
 │   ├── input.mp4           # Sample input highway video
-│   ├── gray.jpeg           # Greyscale reference output
-│   ├── output.jpeg         # Sample detection output
-│   ├── output1.jpeg        # Sample detection output (alt)
-│   ├── output/             # Annotated pipeline output GIFs (with speed overlay)
+│   ├── gray.jpeg           # Greyscale edge detection output
+│   ├── output.jpeg         # Sample annotated frame
+│   ├── output1.jpeg        # Sample annotated frame (alt)
+│   ├── full_output.gif     # All lanes combined with speed overlay
+│   ├── output/             # Per-lane annotated GIFs (with speed overlay)
 │   │   ├── output1.gif
-│   │   └── ...
-│   └── samples/            # Raw per-lane split clips (pre-speed detection)
-│       ├── output1.avi
-│       ├── output2.avi
-│       ├── output3.avi
-│       ├── output4.avi
-│       ├── output5.avi
-│       └── output6.avi
+│   │   ├── output2.gif
+│   │   ├── output3.gif
+│   │   ├── output4.gif
+│   │   ├── output5.gif
+│   │   └── output6.gif
+│   └── samples/            # Raw per-lane split GIFs (pre-speed detection)
+│       ├── output1.gif
+│       ├── output2.gif
+│       ├── output3.gif
+│       ├── output4.gif
+│       ├── output5.gif
+│       └── output6.gif
 ├── requirements.txt
 └── LICENSE
 ```
