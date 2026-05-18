@@ -1,5 +1,5 @@
 """
-speedvision — Real-time vehicle speed detection from highway camera footage.
+speedvision: Real-time vehicle speed detection from highway camera footage.
 
 Pipeline overview:
     1. detect_lanes()        — Canny edge detection on a reference image to
@@ -18,30 +18,34 @@ Usage::
 
 All outputs land in ``<output-dir>/split/`` (raw lane clips) and
 ``<output-dir>/final/`` (annotated clips + snapshots).
+
+Import as:
+
+    import src.speed_detect as speedvision
 """
 
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import threading
-import time
-from typing import Sequence
 
 import cv2
 
+_LOG = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
+# =========================================================================
+# CLI.
+# =========================================================================
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments.
+    """
+    Parse command-line arguments.
 
-    Returns:
-        Parsed namespace with attributes: input_image, input_video,
-        output_dir, speed_limit, start_line, stop_line.
+    :return: parsed namespace with input_image, input_video, output_dir,
+             speed_limit, start_line, stop_line
     """
     parser = argparse.ArgumentParser(
         description="Detect vehicle speeds from highway video footage.",
@@ -62,29 +66,22 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-# ---------------------------------------------------------------------------
-# Step 1 — Lane detection
-# ---------------------------------------------------------------------------
+# =========================================================================
+# Step 1: Lane detection.
+# =========================================================================
 
 
 def detect_lanes(input_image_path: str) -> list[int]:
-    """Detect horizontal lane boundaries from a reference highway image.
+    """
+    Detect horizontal lane boundaries from a reference highway image.
 
     Applies Canny edge detection followed by contour analysis to find
-    large horizontal structures (lane dividers). Boundaries that are at
-    least 70 pixels apart are kept; closer ones are merged.
+    large horizontal structures (lane dividers). Boundaries closer than
+    70 pixels apart are merged.
 
-    Args:
-        input_image_path: Path to a single frame of the highway footage that
-            clearly shows the lane markings.
-
-    Returns:
-        Sorted list of y-coordinates representing the top edge of each lane.
-        Must have at least 2 entries (top and bottom of the first lane) for
-        the rest of the pipeline to function.
-
-    Raises:
-        FileNotFoundError: If the image cannot be read from disk.
+    :param input_image_path: path to a single frame showing lane markings
+    :return: sorted list of y-coordinates representing the top edge of each lane
+    :raises FileNotFoundError: if the image cannot be read from disk
     """
     image = cv2.imread(input_image_path)
     if image is None:
@@ -104,7 +101,7 @@ def detect_lanes(input_image_path: str) -> list[int]:
 
     y_coords.sort()
 
-    # Merge boundaries that are closer than 70px — they belong to the same edge.
+    # Merge boundaries closer than 70px — they belong to the same edge.
     boundaries: list[int] = []
     for i in range(len(y_coords) - 1):
         if y_coords[i + 1] - y_coords[i] > 70:
@@ -115,9 +112,9 @@ def detect_lanes(input_image_path: str) -> list[int]:
     return boundaries
 
 
-# ---------------------------------------------------------------------------
-# Step 2 — Video splitting by lane
-# ---------------------------------------------------------------------------
+# =========================================================================
+# Step 2: Video splitting by lane.
+# =========================================================================
 
 
 def split_video_by_lane(
@@ -125,22 +122,14 @@ def split_video_by_lane(
     lane_boundaries: list[int],
     split_dir: str,
 ) -> int:
-    """Slice the input video into one clip per lane.
+    """
+    Slice the input video into one clip per lane.
 
-    Each output clip contains only the horizontal band of the frame that
-    corresponds to a single lane, defined by consecutive entries in
-    *lane_boundaries*.
-
-    Args:
-        input_video:      Path to the full-width highway video.
-        lane_boundaries:  Sorted y-coordinate list from :func:`detect_lanes`.
-        split_dir:        Directory where per-lane AVI files are written.
-
-    Returns:
-        Number of lane clips written (= ``len(lane_boundaries) - 1``).
-
-    Raises:
-        FileNotFoundError: If the video cannot be opened.
+    :param input_video: path to the full-width highway video
+    :param lane_boundaries: sorted y-coordinate list from :func:`detect_lanes`
+    :param split_dir: directory where per-lane AVI files are written
+    :return: number of lane clips written
+    :raises FileNotFoundError: if the video cannot be opened
     """
     os.makedirs(split_dir, exist_ok=True)
 
@@ -174,9 +163,8 @@ def split_video_by_lane(
             upper, lower = lane_boundaries[i], lane_boundaries[i + 1]
             writer.write(frame[upper:lower, 0:frame_width])
         frame_count += 1
-        print(f"\rSplitting video: {frame_count / total_frames * 100:.1f}%", end="", flush=True)
+        _LOG.info("Splitting video: %.1f%%", frame_count / total_frames * 100)
 
-    print()
     cap.release()
     for w in writers:
         w.release()
@@ -184,23 +172,21 @@ def split_video_by_lane(
     return len(writers)
 
 
-# ---------------------------------------------------------------------------
-# Step 3 — Speed calculation per lane (run in parallel threads)
-# ---------------------------------------------------------------------------
+# =========================================================================
+# Step 3: Speed calculation per lane (parallel threads).
+# =========================================================================
 
 
 def _km_per_pixel(lane_height: int) -> float:
-    """Estimate the real-world distance (km) represented by one pixel.
+    """
+    Estimate the real-world distance (km) represented by one pixel.
 
     The constant 0.0035 km is an empirical calibration for standard highway
-    footage taken from an overhead camera at ≈10 m height. Adjust for
+    footage from an overhead camera at approximately 10 m height. Adjust for
     different camera setups.
 
-    Args:
-        lane_height: Height of the lane crop in pixels.
-
-    Returns:
-        Kilometres per pixel ratio.
+    :param lane_height: height of the lane crop in pixels
+    :return: kilometres per pixel ratio
     """
     return 0.0035 / lane_height if lane_height > 0 else 0.0
 
@@ -213,24 +199,20 @@ def calculate_speeds(
     start_x: int,
     stop_x: int,
 ) -> None:
-    """Detect and record vehicle speeds for one lane clip.
+    """
+    Detect and record vehicle speeds for one lane clip.
 
     Uses background subtraction (frame differencing) to detect moving
     vehicles. Speed is calculated from the time a vehicle takes to travel
-    from *start_x* to *stop_x*, scaled by the pixel-to-km ratio.
+    from start_x to stop_x, scaled by the pixel-to-km ratio.
 
-    Annotated output video and per-vehicle snapshots are written to
-    *final_dir*. Vehicles exceeding *speed_limit* also have their snapshot
-    saved in ``final_dir/image/overspeed/``.
-
-    Args:
-        lane_index:  1-based lane number (matches the filename from
-                     :func:`split_video_by_lane`).
-        split_dir:   Directory containing the per-lane clip files.
-        final_dir:   Directory where annotated output and snapshots are saved.
-        speed_limit: Threshold in km/h above which a vehicle is flagged.
-        start_x:     Left detection line x-coordinate.
-        stop_x:      Right detection line x-coordinate.
+    :param lane_index: 1-based lane number matching the filename from
+                       :func:`split_video_by_lane`
+    :param split_dir: directory containing the per-lane clip files
+    :param final_dir: directory where annotated output and snapshots are saved
+    :param speed_limit: threshold in km/h above which a vehicle is flagged
+    :param start_x: left detection line x-coordinate
+    :param stop_x: right detection line x-coordinate
     """
     lane_img_dir = os.path.join(final_dir, "image", str(lane_index))
     overspeed_dir = os.path.join(final_dir, "image", "overspeed")
@@ -240,7 +222,7 @@ def calculate_speeds(
     clip_path = os.path.join(split_dir, f"output{lane_index}.avi")
     cap = cv2.VideoCapture(clip_path)
     if not cap.isOpened():
-        print(f"Warning: could not open {clip_path}")
+        _LOG.warning("Could not open %s.", clip_path)
         return
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -255,7 +237,7 @@ def calculate_speeds(
         return
 
     km_per_pix = _km_per_pixel(frame1.shape[0])
-    # Minimum contour area to be classified as a vehicle (2/3 of lane area).
+    # Minimum contour area to classify as a vehicle (2/3 of lane area).
     min_vehicle_area = (frame1.shape[0] ** 2) * 2 / 3
 
     out = cv2.VideoWriter(
@@ -265,14 +247,14 @@ def calculate_speeds(
 
     ret, frame2 = cap.read()
 
-    # --- Tracking state ---
-    tracking_start = False   # vehicle crossed start_x
-    tracking_end = False     # vehicle crossed stop_x
-    frame_at_start = 0       # frame number when tracking started
-    frame_at_end = 0         # frame number when tracking ended
-    x_at_start = 0.0         # centroid x when tracking started
-    x_at_end = 0.0           # centroid x when tracking ended
-    phase = 0                # 0=idle, 1=started, 2=ended (snapshot pending)
+    # Tracking state.
+    tracking_start = False
+    tracking_end = False
+    frame_at_start = 0
+    frame_at_end = 0
+    x_at_start = 0.0
+    x_at_end = 0.0
+    phase = 0
     snap_pending = False
     frame_count = 0
 
@@ -286,16 +268,15 @@ def calculate_speeds(
 
         for contour in contours:
             if cv2.contourArea(contour) < min_vehicle_area:
-                continue  # too small — ignore noise
+                continue
 
             (x, y, w, h) = cv2.boundingRect(contour)
-            cx = x + w * 0.5  # horizontal centroid
+            cx = x + w * 0.5
 
-            # Draw detection lines on the frame.
             cv2.line(frame1, (stop_x, 10), (stop_x, 100), (255, 0, 0), 5)
             cv2.line(frame1, (start_x, 10), (start_x, 100), (255, 0, 0), 5)
 
-            # Speed annotation when the vehicle passes the stop line.
+            # Annotate speed when the vehicle passes the stop line.
             if cx > stop_x and phase == 2:
                 time_elapsed = (frame_at_end - frame_at_start) * sec_per_frame / 3600
                 distance = abs(x_at_end - x_at_start) * km_per_pix
@@ -313,9 +294,11 @@ def calculate_speeds(
                     snapshot_name = f"{speed:.1f}kmh.jpg"
                     cv2.imwrite(os.path.join(lane_img_dir, snapshot_name), frame1)
                     if speed > speed_limit:
-                        cv2.imwrite(os.path.join(overspeed_dir, f"lane{lane_index}_{snapshot_name}"), frame1)
+                        cv2.imwrite(
+                            os.path.join(overspeed_dir, f"lane{lane_index}_{snapshot_name}"),
+                            frame1,
+                        )
 
-            # Skip vehicles outside the measurement zone.
             if cx > stop_x or cx < start_x:
                 continue
 
@@ -344,50 +327,43 @@ def calculate_speeds(
             break
 
         frame_count += 1
-        print(
-            f"\rLane {lane_index} — speed analysis: "
-            f"{frame_count / total_frames * 100:.1f}%",
-            end="", flush=True,
-        )
+        _LOG.info("Lane %d speed analysis: %.1f%%", lane_index, frame_count / total_frames * 100)
 
-        if cv2.waitKey(40) == 27:  # ESC to abort
+        if cv2.waitKey(40) == 27:
             break
 
-    print()
     cap.release()
     out.release()
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
+# =========================================================================
+# Entry point.
+# =========================================================================
 
 
 def main() -> None:
-    """Run the full speed-detection pipeline.
+    """
+    Run the full speed-detection pipeline.
 
-    1. Parse CLI arguments.
-    2. Detect lane boundaries from the reference image.
-    3. Split the input video into one clip per lane.
-    4. Run speed calculation on each lane in parallel threads.
+    Detects lane boundaries, splits the video by lane, then runs speed
+    calculation on each lane in parallel threads.
     """
     args = parse_args()
     split_dir = os.path.join(args.output_dir, "split")
     final_dir = os.path.join(args.output_dir, "final")
 
-    print("Step 1/3 — Detecting lane boundaries…")
+    _LOG.info("Step 1/3: Detecting lane boundaries.")
     lanes = detect_lanes(args.input_image)
     if len(lanes) < 2:
-        print("Error: fewer than 2 lane boundaries detected. "
-              "Check the reference image and try again.")
+        _LOG.error("Fewer than 2 lane boundaries detected. Check the reference image.")
         return
-    print(f"  Found {len(lanes) - 1} lane(s): boundaries at y={lanes}")
+    _LOG.info("Found %d lane(s): boundaries at y=%s.", len(lanes) - 1, lanes)
 
-    print("Step 2/3 — Splitting video by lane…")
+    _LOG.info("Step 2/3: Splitting video by lane.")
     num_lanes = split_video_by_lane(args.input_video, lanes, split_dir)
-    print(f"  Wrote {num_lanes} lane clip(s) to {split_dir}")
+    _LOG.info("Wrote %d lane clip(s) to %s.", num_lanes, split_dir)
 
-    print("Step 3/3 — Calculating vehicle speeds (one thread per lane)…")
+    _LOG.info("Step 3/3: Calculating vehicle speeds (one thread per lane).")
     threads: list[threading.Thread] = [
         threading.Thread(
             target=calculate_speeds,
@@ -401,8 +377,13 @@ def main() -> None:
     for t in threads:
         t.join()
 
-    print(f"\nDone. All output in: {args.output_dir}")
+    _LOG.info("Done. All output in: %s", args.output_dir)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     main()
