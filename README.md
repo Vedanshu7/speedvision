@@ -20,16 +20,6 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 |---|---|
 | ![Output](assets/output.jpeg) | ![Output alt](assets/output1.jpeg) |
 
-**Full pipeline output: annotated per-lane clips with speed overlay** (from `assets/output/`):
-
-| Lane 1 | Lane 2 | Lane 3 |
-|--------|--------|--------|
-| ![Lane 1](assets/output/output1.gif) | ![Lane 2](assets/output/output2.gif) | ![Lane 3](assets/output/output3.gif) |
-
-| Lane 4 | Lane 5 | Lane 6 |
-|--------|--------|--------|
-| ![Lane 4](assets/output/output4.gif) | ![Lane 5](assets/output/output5.gif) | ![Lane 6](assets/output/output6.gif) |
-
 **Raw per-lane split clips** (pre-processed, from `assets/samples/`):
 
 | Lane 1 | Lane 2 | Lane 3 |
@@ -39,6 +29,16 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 | Lane 4 | Lane 5 | Lane 6 |
 |--------|--------|--------|
 | ![Lane 4](assets/samples/output4.gif) | ![Lane 5](assets/samples/output5.gif) | ![Lane 6](assets/samples/output6.gif) |
+
+**Full pipeline output: annotated per-lane clips with speed overlay** (from `assets/output/`):
+
+| Lane 1 | Lane 2 | Lane 3 |
+|--------|--------|--------|
+| ![Lane 1](assets/output/output1.gif) | ![Lane 2](assets/output/output2.gif) | ![Lane 3](assets/output/output3.gif) |
+
+| Lane 4 | Lane 5 | Lane 6 |
+|--------|--------|--------|
+| ![Lane 4](assets/output/output4.gif) | ![Lane 5](assets/output/output5.gif) | ![Lane 6](assets/output/output6.gif) |
 
 ---
 
