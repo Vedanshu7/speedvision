@@ -21,7 +21,14 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 | ![Output](assets/output.jpeg) | ![Output alt](assets/output1.jpeg) |
 
 **Sample per-lane split clips** (pre-run, from `assets/samples/`):
-`output1.avi` `output2.avi` `output3.avi` `output4.avi` `output5.avi` `output6.avi`
+
+| Lane 1 | Lane 2 | Lane 3 |
+|--------|--------|--------|
+| ![Lane 1](assets/samples/output1.mp4) | ![Lane 2](assets/samples/output2.mp4) | ![Lane 3](assets/samples/output3.mp4) |
+
+| Lane 4 | Lane 5 | Lane 6 |
+|--------|--------|--------|
+| ![Lane 4](assets/samples/output4.mp4) | ![Lane 5](assets/samples/output5.mp4) | ![Lane 6](assets/samples/output6.mp4) |
 
 ---
 

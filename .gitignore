@@ -12,3 +12,5 @@ __pycache__/
 # Allow sample assets.
 !assets/input.mp4
 !assets/samples/
+!assets/samples/*.avi
+!assets/samples/*.mp4
