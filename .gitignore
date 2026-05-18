@@ -14,3 +14,4 @@ __pycache__/
 !assets/samples/
 !assets/samples/*.avi
 !assets/samples/*.mp4
+!assets/samples/*.gif
