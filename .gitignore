@@ -1,0 +1,12 @@
+*.mp4
+*.avi
+*.mov
+output/
+split/
+final/
+assets/*.mp4
+assets/*.avi
+venv/
+__pycache__/
+.idea/
+*.pyc
