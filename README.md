@@ -117,13 +117,21 @@ python src/speed_detect.py \
 ```
 output/
 ├── split/
-│   ├── output1.avi         # Per-lane split video
-│   └── output2.avi
+│   ├── output1.avi         # Per-lane split video (one per lane)
+│   ├── output2.avi
+│   ├── ...
+│   └── output6.avi
 └── final/
-    ├── output1.avi         # Annotated output with speed overlay
+    ├── output1.avi         # Annotated output with speed overlay (one per lane)
+    ├── output2.avi
+    ├── ...
+    ├── output6.avi
     └── image/
-        ├── 1/              # All vehicle snapshots for lane 1
-        └── overspeed/      # Snapshots of vehicles over the limit
+        ├── 1/              # Vehicle snapshots for lane 1
+        ├── 2/              # Vehicle snapshots for lane 2
+        ├── ...
+        ├── 6/              # Vehicle snapshots for lane 6
+        └── overspeed/      # Snapshots of vehicles over the speed limit
 ```
 
 ## Calibration
