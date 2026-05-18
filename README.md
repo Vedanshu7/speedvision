@@ -14,13 +14,23 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 
 ![Greyscale edge detection](assets/gray.jpeg)
 
-**Output: annotated frame with vehicle detection and speed overlay**
+**Output: annotated frames with vehicle detection and speed overlay**
 
 | Detection output | Alt view |
 |---|---|
 | ![Output](assets/output.jpeg) | ![Output alt](assets/output1.jpeg) |
 
-**Sample per-lane split clips** (pre-run, from `assets/samples/`):
+**Full pipeline output: annotated per-lane clips with speed overlay** (from `assets/output/`):
+
+| Lane 1 | Lane 2 | Lane 3 |
+|--------|--------|--------|
+| ![Lane 1](assets/output/output1.gif) | ![Lane 2](assets/output/output2.gif) | ![Lane 3](assets/output/output3.gif) |
+
+| Lane 4 | Lane 5 | Lane 6 |
+|--------|--------|--------|
+| ![Lane 4](assets/output/output4.gif) | ![Lane 5](assets/output/output5.gif) | ![Lane 6](assets/output/output6.gif) |
+
+**Raw per-lane split clips** (pre-processed, from `assets/samples/`):
 
 | Lane 1 | Lane 2 | Lane 3 |
 |--------|--------|--------|
@@ -57,7 +67,10 @@ speedvision/
 │   ├── gray.jpeg           # Greyscale reference output
 │   ├── output.jpeg         # Sample detection output
 │   ├── output1.jpeg        # Sample detection output (alt)
-│   └── samples/            # Pre-run per-lane split clips
+│   ├── output/             # Annotated pipeline output GIFs (with speed overlay)
+│   │   ├── output1.gif
+│   │   └── ...
+│   └── samples/            # Raw per-lane split clips (pre-speed detection)
 │       ├── output1.avi
 │       ├── output2.avi
 │       ├── output3.avi
