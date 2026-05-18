@@ -40,6 +40,10 @@ Real-time vehicle speed detection from highway camera footage using OpenCV.
 |--------|--------|--------|
 | ![Lane 4](assets/output/output4.gif) | ![Lane 5](assets/output/output5.gif) | ![Lane 6](assets/output/output6.gif) |
 
+**All lanes combined: full highway view with speed overlay**
+
+![Full highway output](assets/full_output.gif)
+
 ---
 
 ## How It Works
